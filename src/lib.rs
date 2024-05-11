@@ -3,6 +3,7 @@
 // pub use raylib_ffi::Color;
 // pub use raylib_ffi::{Camera, Camera2D, Camera3D};
 // pub use raylib_ffi::{Vector2, Vector3, Vector4};
+// TODO: Only re-export non ffi functions/types
 pub use raylib_ffi::*;
 
 pub mod rcore;

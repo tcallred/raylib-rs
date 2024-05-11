@@ -1,3 +1,6 @@
+use std::ffi::CString;
+
+use crate::enums::MouseButton;
 use crate::Color;
 use crate::Shader;
 use crate::Texture2D;
@@ -636,18 +639,18 @@ pub fn set_trace_log_level(log_level: i32) {
 }
 
 /// Internal memory allocator.
-pub fn mem_alloc(size: u32) -> *mut std::ffi::c_void {
-    unsafe { raylib_ffi::MemAlloc(size) }
+pub unsafe fn mem_alloc(size: u32) -> *mut std::ffi::c_void {
+    raylib_ffi::MemAlloc(size)
 }
 
 /// Internal memory reallocator.
-pub fn mem_realloc(ptr: *mut std::ffi::c_void, size: u32) -> *mut std::ffi::c_void {
-    unsafe { raylib_ffi::MemRealloc(ptr, size) }
+pub unsafe fn mem_realloc(ptr: *mut std::ffi::c_void, size: u32) -> *mut std::ffi::c_void {
+    raylib_ffi::MemRealloc(ptr, size)
 }
 
 /// Internal memory free.
-pub fn mem_free(ptr: *mut std::ffi::c_void) {
-    unsafe { raylib_ffi::MemFree(ptr) }
+pub unsafe fn mem_free(ptr: *mut std::ffi::c_void) {
+    raylib_ffi::MemFree(ptr)
 }
 
 /// Set custom trace log.
@@ -689,7 +692,7 @@ pub fn save_file_data(file_name: &str, data: &[u8]) -> bool {
 // Compression/Encoding functionality (continued)
 
 /// Compress data (DEFLATE algorithm), memory must be freed.
-pub fn compress_data(data: &[u8]) -> Option<(Vec<u8>, i32)> {
+pub fn compress_data(data: &[u8]) -> Option<Vec<u8>> {
     unsafe {
         let mut comp_data_size = 0;
         let comp_data_ptr =
@@ -700,7 +703,7 @@ pub fn compress_data(data: &[u8]) -> Option<(Vec<u8>, i32)> {
             let comp_data =
                 std::slice::from_raw_parts(comp_data_ptr, comp_data_size as usize).to_vec();
             raylib_ffi::MemFree(comp_data_ptr as *mut std::ffi::c_void);
-            Some((comp_data, comp_data_size))
+            Some(comp_data)
         }
     }
 }
@@ -774,13 +777,416 @@ pub fn load_automation_event_list(file_name: &str) -> crate::AutomationEventList
 }
 
 // Input-related functions: keyboard
+/// Helper function for converting from integer to KeyboardKey
+pub fn integer_to_keyboard_key(num: i32) -> crate::enums::KeyboardKey {
+    use crate::enums::KeyboardKey;
+    match num {
+        0 => KeyboardKey::Null,
+        39 => KeyboardKey::Apostrophe,
+        44 => KeyboardKey::Comma,
+        45 => KeyboardKey::Minus,
+        46 => KeyboardKey::Period,
+        47 => KeyboardKey::Slash,
+        48 => KeyboardKey::Zero,
+        49 => KeyboardKey::One,
+        50 => KeyboardKey::Two,
+        51 => KeyboardKey::Three,
+        52 => KeyboardKey::Four,
+        53 => KeyboardKey::Five,
+        54 => KeyboardKey::Six,
+        55 => KeyboardKey::Seven,
+        56 => KeyboardKey::Eight,
+        57 => KeyboardKey::Nine,
+        59 => KeyboardKey::Semicolon,
+        61 => KeyboardKey::Equal,
+        65 => KeyboardKey::A,
+        66 => KeyboardKey::B,
+        67 => KeyboardKey::C,
+        68 => KeyboardKey::D,
+        69 => KeyboardKey::E,
+        70 => KeyboardKey::F,
+        71 => KeyboardKey::G,
+        72 => KeyboardKey::H,
+        73 => KeyboardKey::I,
+        74 => KeyboardKey::J,
+        75 => KeyboardKey::K,
+        76 => KeyboardKey::L,
+        77 => KeyboardKey::M,
+        78 => KeyboardKey::N,
+        79 => KeyboardKey::O,
+        80 => KeyboardKey::P,
+        81 => KeyboardKey::Q,
+        82 => KeyboardKey::R,
+        83 => KeyboardKey::S,
+        84 => KeyboardKey::T,
+        85 => KeyboardKey::U,
+        86 => KeyboardKey::V,
+        87 => KeyboardKey::W,
+        88 => KeyboardKey::X,
+        89 => KeyboardKey::Y,
+        90 => KeyboardKey::Z,
+        91 => KeyboardKey::LeftBracket,
+        92 => KeyboardKey::Backslash,
+        93 => KeyboardKey::RightBracket,
+        96 => KeyboardKey::Grave,
+        32 => KeyboardKey::Space,
+        256 => KeyboardKey::Escape,
+        257 => KeyboardKey::Enter,
+        258 => KeyboardKey::Tab,
+        259 => KeyboardKey::Backspace,
+        260 => KeyboardKey::Insert,
+        261 => KeyboardKey::Delete,
+        262 => KeyboardKey::Right,
+        263 => KeyboardKey::Left,
+        264 => KeyboardKey::Down,
+        265 => KeyboardKey::Up,
+        266 => KeyboardKey::PageUp,
+        267 => KeyboardKey::PageDown,
+        268 => KeyboardKey::Home,
+        269 => KeyboardKey::End,
+        280 => KeyboardKey::CapsLock,
+        281 => KeyboardKey::ScrollLock,
+        282 => KeyboardKey::NumLock,
+        283 => KeyboardKey::PrintScreen,
+        284 => KeyboardKey::Pause,
+        290 => KeyboardKey::F1,
+        291 => KeyboardKey::F2,
+        292 => KeyboardKey::F3,
+        293 => KeyboardKey::F4,
+        294 => KeyboardKey::F5,
+        295 => KeyboardKey::F6,
+        296 => KeyboardKey::F7,
+        297 => KeyboardKey::F8,
+        298 => KeyboardKey::F9,
+        299 => KeyboardKey::F10,
+        300 => KeyboardKey::F11,
+        301 => KeyboardKey::F12,
+        340 => KeyboardKey::LeftShift,
+        341 => KeyboardKey::LeftControl,
+        342 => KeyboardKey::LeftAlt,
+        343 => KeyboardKey::LeftSuper,
+        344 => KeyboardKey::RightShift,
+        345 => KeyboardKey::RightControl,
+        346 => KeyboardKey::RightAlt,
+        347 => KeyboardKey::RightSuper,
+        348 => KeyboardKey::KbMenu,
+        320 => KeyboardKey::Kp0,
+        321 => KeyboardKey::Kp1,
+        322 => KeyboardKey::Kp2,
+        323 => KeyboardKey::Kp3,
+        324 => KeyboardKey::Kp4,
+        325 => KeyboardKey::Kp5,
+        326 => KeyboardKey::Kp6,
+        327 => KeyboardKey::Kp7,
+        328 => KeyboardKey::Kp8,
+        329 => KeyboardKey::Kp9,
+        330 => KeyboardKey::KpDecimal,
+        331 => KeyboardKey::KpDivide,
+        332 => KeyboardKey::KpMultiply,
+        333 => KeyboardKey::KpSubtract,
+        334 => KeyboardKey::KpAdd,
+        335 => KeyboardKey::KpEnter,
+        336 => KeyboardKey::KpEqual,
+        4 => KeyboardKey::Back,
+        24 => KeyboardKey::VolumeUp,
+        25 => KeyboardKey::VolumeDown,
+        _ => KeyboardKey::Null,
+    }
+}
+
 /// Check if a key has been pressed once
 pub fn is_key_pressed(key: crate::enums::KeyboardKey) -> bool {
     unsafe { raylib_ffi::IsKeyPressed(key as i32) }
+}
+
+/// Check if a key has been pressed again (Only PLATFORM_DESKTOP).
+pub fn is_key_pressed_repeat(key: crate::enums::KeyboardKey) -> bool {
+    unsafe { raylib_ffi::IsKeyPressedRepeat(key as i32) }
+}
+
+/// Check if a key is being pressed.
+pub fn is_key_down(key: crate::enums::KeyboardKey) -> bool {
+    unsafe { raylib_ffi::IsKeyDown(key as i32) }
+}
+
+/// Check if a key has been released once.
+pub fn is_key_released(key: crate::enums::KeyboardKey) -> bool {
+    unsafe { raylib_ffi::IsKeyReleased(key as i32) }
+}
+
+/// Check if a key is NOT being pressed.
+pub fn is_key_up(key: crate::enums::KeyboardKey) -> bool {
+    unsafe { raylib_ffi::IsKeyUp(key as i32) }
+}
+
+/// Get key pressed (keycode), call it multiple times for keys queued, returns 0 when the queue is empty.
+pub fn get_key_pressed() -> crate::enums::KeyboardKey {
+    unsafe { integer_to_keyboard_key(raylib_ffi::GetKeyPressed()) }
+}
+
+/// Get char pressed (unicode), call it multiple times for chars queued, returns 0 when the queue is empty.
+pub fn get_char_pressed() -> i32 {
+    unsafe { raylib_ffi::GetCharPressed() }
+}
+
+/// Set a custom key to exit program (default is ESC).
+pub fn set_exit_key(key: crate::enums::KeyboardKey) {
+    unsafe { raylib_ffi::SetExitKey(key as i32) }
+}
+
+// Input-related functions: gamepads
+pub fn integer_to_gamepad_button(num: i32) -> crate::enums::GamepadButton {
+    use crate::enums::GamepadButton;
+
+    match num {
+        0 => GamepadButton::Unknown,
+        1 => GamepadButton::LeftFaceUp,
+        2 => GamepadButton::LeftFaceRight,
+        3 => GamepadButton::LeftFaceDown,
+        4 => GamepadButton::LeftFaceLeft,
+        5 => GamepadButton::RightFaceUp,
+        6 => GamepadButton::RightFaceRight,
+        7 => GamepadButton::RightFaceDown,
+        8 => GamepadButton::RightFaceLeft,
+        9 => GamepadButton::LeftTrigger1,
+        10 => GamepadButton::LeftTrigger2,
+        11 => GamepadButton::RightTrigger1,
+        12 => GamepadButton::RightTrigger2,
+        13 => GamepadButton::MiddleLeft,
+        14 => GamepadButton::Middle,
+        15 => GamepadButton::MiddleRight,
+        16 => GamepadButton::LeftThumb,
+        17 => GamepadButton::RightThumb,
+        _ => GamepadButton::Unknown, // If the number doesn't match any variant, return Unknown
+    }
+}
+
+/// Check if a gamepad is available.
+pub fn is_gamepad_available(gamepad: i32) -> bool {
+    unsafe { raylib_ffi::IsGamepadAvailable(gamepad) }
+}
+
+/// Get gamepad internal name id.
+pub fn get_gamepad_name(gamepad: i32) -> Option<String> {
+    use std::ffi::CStr;
+    unsafe {
+        let name_ptr = raylib_ffi::GetGamepadName(gamepad);
+        if name_ptr.is_null() {
+            None
+        } else {
+            Some(CStr::from_ptr(name_ptr).to_string_lossy().into_owned())
+        }
+    }
+}
+
+/// Check if a gamepad button has been pressed once.
+pub fn is_gamepad_button_pressed(gamepad: i32, button: crate::enums::GamepadButton) -> bool {
+    unsafe { raylib_ffi::IsGamepadButtonPressed(gamepad, button as i32) }
+}
+
+/// Check if a gamepad button is being pressed.
+pub fn is_gamepad_button_down(gamepad: i32, button: crate::enums::GamepadButton) -> bool {
+    unsafe { raylib_ffi::IsGamepadButtonDown(gamepad, button as i32) }
+}
+
+/// Check if a gamepad button has been released once.
+pub fn is_gamepad_button_released(gamepad: i32, button: crate::enums::GamepadButton) -> bool {
+    unsafe { raylib_ffi::IsGamepadButtonReleased(gamepad, button as i32) }
+}
+
+/// Check if a gamepad button is NOT being pressed.
+pub fn is_gamepad_button_up(gamepad: i32, button: crate::enums::GamepadButton) -> bool {
+    unsafe { raylib_ffi::IsGamepadButtonUp(gamepad, button as i32) }
+}
+
+/// Get the last gamepad button pressed.
+pub fn get_gamepad_button_pressed() -> crate::enums::GamepadButton {
+    unsafe { integer_to_gamepad_button(raylib_ffi::GetGamepadButtonPressed()) }
+}
+
+/// Get gamepad axis count for a gamepad.
+pub fn get_gamepad_axis_count(gamepad: i32) -> i32 {
+    unsafe { raylib_ffi::GetGamepadAxisCount(gamepad) }
+}
+
+/// Get axis movement value for a gamepad axis.
+pub fn get_gamepad_axis_movement(gamepad: i32, axis: crate::enums::GamepadAxis) -> f32 {
+    unsafe { raylib_ffi::GetGamepadAxisMovement(gamepad, axis as i32) }
+}
+
+/// Set internal gamepad mappings (SDL_GameControllerDB).
+pub fn set_gamepad_mappings(mappings: &str) -> i32 {
+    unsafe {
+        let mappings_cstring = CString::new(mappings).expect("CString::new failed");
+        raylib_ffi::SetGamepadMappings(mappings_cstring.as_ptr())
+    }
+}
+
+// Input-related functions: mouse
+/// Check if a mouse button has been pressed once
+pub fn is_mouse_button_pressed(button: MouseButton) -> bool {
+    unsafe { raylib_ffi::IsMouseButtonPressed(button as i32) }
+}
+
+/// Check if a mouse button is being pressed
+pub fn is_mouse_button_down(button: MouseButton) -> bool {
+    unsafe { raylib_ffi::IsMouseButtonDown(button as i32) }
+}
+
+/// Check if a mouse button has been released once
+pub fn is_mouse_button_released(button: MouseButton) -> bool {
+    unsafe { raylib_ffi::IsMouseButtonReleased(button as i32) }
+}
+
+/// Check if a mouse button is NOT being pressed
+pub fn is_mouse_button_up(button: MouseButton) -> bool {
+    unsafe { raylib_ffi::IsMouseButtonUp(button as i32) }
+}
+
+/// Get mouse position X
+pub fn get_mouse_x() -> i32 {
+    unsafe { raylib_ffi::GetMouseX() }
+}
+
+/// Get mouse position Y
+pub fn get_mouse_y() -> i32 {
+    unsafe { raylib_ffi::GetMouseY() }
+}
+
+/// Get mouse position XY
+pub fn get_mouse_position() -> Vector2 {
+    unsafe { raylib_ffi::GetMousePosition() }
+}
+
+/// Get mouse delta between frames
+pub fn get_mouse_delta() -> Vector2 {
+    unsafe { raylib_ffi::GetMouseDelta() }
+}
+
+/// Set mouse position XY
+pub fn set_mouse_position(x: i32, y: i32) {
+    unsafe { raylib_ffi::SetMousePosition(x, y) }
+}
+
+/// Set mouse offset
+pub fn set_mouse_offset(offset_x: i32, offset_y: i32) {
+    unsafe { raylib_ffi::SetMouseOffset(offset_x, offset_y) }
+}
+
+/// Set mouse scaling
+pub fn set_mouse_scale(scale_x: f32, scale_y: f32) {
+    unsafe { raylib_ffi::SetMouseScale(scale_x, scale_y) }
+}
+
+/// Get mouse wheel movement for X or Y, whichever is larger
+pub fn get_mouse_wheel_move() -> f32 {
+    unsafe { raylib_ffi::GetMouseWheelMove() }
+}
+
+/// Get mouse wheel movement for both X and Y
+pub fn get_mouse_wheel_move_v() -> Vector2 {
+    unsafe { raylib_ffi::GetMouseWheelMoveV() }
+}
+
+/// Set mouse cursor
+pub fn set_mouse_cursor(cursor: i32) {
+    unsafe { raylib_ffi::SetMouseCursor(cursor) }
+}
+
+// Input-related functions: touch
+/// Get touch position X for touch point 0 (relative to screen size)
+pub fn get_touch_x() -> i32 {
+    unsafe { raylib_ffi::GetTouchX() }
+}
+
+/// Get touch position Y for touch point 0 (relative to screen size)
+pub fn get_touch_y() -> i32 {
+    unsafe { raylib_ffi::GetTouchY() }
+}
+
+/// Get touch position XY for a touch point index (relative to screen size)
+pub fn get_touch_position(index: i32) -> Vector2 {
+    unsafe { raylib_ffi::GetTouchPosition(index) }
+}
+
+/// Get touch point identifier for given index
+pub fn get_touch_point_id(index: i32) -> i32 {
+    unsafe { raylib_ffi::GetTouchPointId(index) }
+}
+
+/// Get number of touch points
+pub fn get_touch_point_count() -> i32 {
+    unsafe { raylib_ffi::GetTouchPointCount() }
+}
+
+// Gestures and Touch Handling Functions (Module: rgestures)
+/// Helper function to convert integer to gesture
+pub fn integer_to_gesture(num: i32) -> crate::enums::Gesture {
+    use crate::enums::Gesture;
+    match num {
+        0 => Gesture::None,
+        1 => Gesture::Tap,
+        2 => Gesture::Doubletap,
+        4 => Gesture::Hold,
+        8 => Gesture::Drag,
+        16 => Gesture::SwipeRight,
+        32 => Gesture::SwipeLeft,
+        64 => Gesture::SwipeUp,
+        128 => Gesture::SwipeDown,
+        256 => Gesture::PinchIn,
+        512 => Gesture::PinchOut,
+        _ => Gesture::None, // If the number doesn't match any variant, return None
+    }
+}
+/// Enable a set of gestures using flags
+pub fn set_gestures_enabled(flags: u32) {
+    unsafe { raylib_ffi::SetGesturesEnabled(flags) }
+}
+
+/// Check if a gesture has been detected
+pub fn is_gesture_detected(gesture: crate::enums::Gesture) -> bool {
+    unsafe { raylib_ffi::IsGestureDetected(gesture as u32) }
+}
+
+/// Get latest detected gesture
+pub fn get_gesture_detected() -> crate::enums::Gesture {
+    unsafe { integer_to_gesture(raylib_ffi::GetGestureDetected()) }
+}
+
+/// Get gesture hold time in milliseconds
+pub fn get_gesture_hold_duration() -> f32 {
+    unsafe { raylib_ffi::GetGestureHoldDuration() }
+}
+
+/// Get gesture drag vector
+pub fn get_gesture_drag_vector() -> Vector2 {
+    unsafe { raylib_ffi::GetGestureDragVector() }
+}
+
+/// Get gesture drag angle
+pub fn get_gesture_drag_angle() -> f32 {
+    unsafe { raylib_ffi::GetGestureDragAngle() }
+}
+
+/// Get gesture pinch delta
+pub fn get_gesture_pinch_vector() -> Vector2 {
+    unsafe { raylib_ffi::GetGesturePinchVector() }
+}
+
+/// Get gesture pinch angle
+pub fn get_gesture_pinch_angle() -> f32 {
+    unsafe { raylib_ffi::GetGesturePinchAngle() }
 }
 
 // Camera System Functions
 /// Update camera position for selected mode
 pub fn update_camera(camera: &mut crate::Camera, mode: crate::enums::CameraMode) {
     unsafe { raylib_ffi::UpdateCamera(camera, mode as i32) }
+}
+
+/// Update camera movement/rotation
+pub fn update_camera_pro(camera: &mut Camera, movement: Vector3, rotation: Vector3, zoom: f32) {
+    unsafe {
+        raylib_ffi::UpdateCameraPro(camera as *mut Camera, movement, rotation, zoom);
+    }
 }
