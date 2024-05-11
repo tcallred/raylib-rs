@@ -10,6 +10,11 @@ pub mod rcore;
 pub mod rtext {
     use std::ffi::CString;
     // Text drawing functions
+    /// Draw current FPS
+    pub fn draw_fps(pos_x: i32, pos_y: i32) {
+        unsafe { raylib_ffi::DrawFPS(pos_x, pos_y) }
+    }
+
     /// Draw text (using default font)
     pub fn draw_text(text: &str, pos_x: i32, pos_y: i32, font_size: i32, color: raylib_ffi::Color) {
         unsafe {

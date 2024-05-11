@@ -3,6 +3,7 @@ use raylib::enums;
 use raylib::rcore;
 use raylib::rcore::is_key_pressed;
 use raylib::rmodels;
+use raylib::rtext;
 use raylib::Camera;
 use raylib::Vector3;
 
@@ -55,6 +56,7 @@ pub fn main() {
         rmodels::draw_grid(10, 1.0);
 
         rcore::end_mode_3d();
+        rtext::draw_fps(5, 5);
 
         rcore::end_drawing();
     }
