@@ -7,6 +7,7 @@
 pub use raylib_ffi::*;
 
 pub mod rcore;
+pub mod rshapes;
 pub mod rtext {
     use std::ffi::CString;
     // Text drawing functions
@@ -44,17 +45,3 @@ pub mod rmodels {
     }
 }
 
-pub mod rshapes {
-    use raylib_ffi::Color;
-
-    // Basic shapes drawing functions
-    /// Draw a color-filled rectangle
-    pub fn draw_rectangle(pos_x: i32, pos_y: i32, width: i32, height: i32, color: Color) {
-        unsafe { raylib_ffi::DrawRectangle(pos_x, pos_y, width, height, color) }
-    }
-
-    /// Draw rectangle outline
-    pub fn draw_rectangle_lines(pos_x: i32, pos_y: i32, width: i32, height: i32, color: Color) {
-        unsafe { raylib_ffi::DrawRectangleLines(pos_x, pos_y, width, height, color) }
-    }
-}

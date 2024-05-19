@@ -1,5 +1,5 @@
 use raylib::colors;
-use raylib::enums;
+use raylib::enums::{CameraMode, CameraProjection, KeyboardKey};
 use raylib::rcore;
 use raylib::rcore::is_key_pressed;
 use raylib::rmodels;
@@ -26,7 +26,7 @@ pub fn main() {
             z: 0.0,
         },
         fovy: 45.0,
-        projection: enums::CameraProjection::Perspective as i32,
+        projection: CameraProjection::Perspective as i32,
     };
 
     let cube_position = Vector3 {
@@ -39,8 +39,8 @@ pub fn main() {
     rcore::set_target_fps(60);
     while !rcore::window_should_close() {
         rcore::clear_background(colors::WHITE);
-        rcore::update_camera(&mut camera, enums::CameraMode::Free);
-        if is_key_pressed(enums::KeyboardKey::Z) {
+        rcore::update_camera(&mut camera, CameraMode::Free);
+        if is_key_pressed(KeyboardKey::Z) {
             camera.target = Vector3 {
                 x: 0.0,
                 y: 0.0,
