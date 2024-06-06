@@ -8,22 +8,8 @@ pub use raylib_ffi::*;
 
 pub mod rcore;
 pub mod rshapes;
-pub mod rtext {
-    use std::ffi::CString;
-    // Text drawing functions
-    /// Draw current FPS
-    pub fn draw_fps(pos_x: i32, pos_y: i32) {
-        unsafe { raylib_ffi::DrawFPS(pos_x, pos_y) }
-    }
+pub mod rtext;
 
-    /// Draw text (using default font)
-    pub fn draw_text(text: &str, pos_x: i32, pos_y: i32, font_size: i32, color: raylib_ffi::Color) {
-        unsafe {
-            let c_str_text = CString::new(text).expect("CString::new failed");
-            raylib_ffi::DrawText(c_str_text.as_ptr(), pos_x, pos_y, font_size, color);
-        }
-    }
-}
 
 pub mod rmodels {
     use raylib_ffi::Color;
